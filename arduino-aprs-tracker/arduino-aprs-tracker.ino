@@ -50,9 +50,9 @@ char APRS_SYMBOL = '>';
 #define TURN_SLOPE  240
 #define MIN_TURN_TIME 20
 
-//long instead of float for latitude and longitude
-long lat = 0;
-long lon = 0;
+//long instead of float for latitude and longitude, TinyGPSPlus needs double
+double lat = 0;
+double lon = 0;
 
 int speed_kt = 0;
 int currentcourse=0;
@@ -96,7 +96,8 @@ void loop()
   byte month=0, day=0, hour=0, minute=0, second=0, hundredths=0;
   unsigned long age=0;
 
-  float falt=0, fkmph=0;
+  int altm=0;
+  float fkmph=0;
 
   unsigned long lastTX =0, tx_interval= 0;
 
@@ -109,12 +110,7 @@ void loop()
       char c = GPSSerial.read();
       // Serial.write(c); // uncomment this line if you want to see the GPS data flowing
       if (gps.encode(c)) // Did a new valid sentence come in?
-      {
-      // FIXME potential wrong data coming from GPS
-        lat=gps.location.lat();
-        lon=gps.location.lng();
-        if (lat != 0) newData = true;
-      }
+       newData = true;
     }
   }
 
@@ -130,8 +126,8 @@ void loop()
     lat=gps.location.lat();
     lon=gps.location.lng();
 
-    falt = gps.altitude.meters(); // +/- altitude in meters
-    ialt = int(falt*3.281);  // integer value of altitude in feet
+    altm = int(gps.altitude.meters()); // integer value of altitude in meters
+    ialt = int(gps.altitude.feet());  // integer value of altitude in feet
 
     fkmph = gps.speed.kmph(); // speed in km/hs
 
@@ -168,7 +164,7 @@ void loop()
     Serial.print(deg_to_nmea(lat, true));
     Serial.print(F("/"));
     Serial.print(deg_to_nmea(lon, false));
-    Serial.print(F(" Altitude m/ft: ")); Serial.print(falt);Serial.print(F("/"));Serial.println(ialt);
+    Serial.print(F(" Altitude m/ft: ")); Serial.print(altm);Serial.print(F("/"));Serial.println(ialt);
 
 
     if (digitalRead(BUTTON_PIN)==0)
