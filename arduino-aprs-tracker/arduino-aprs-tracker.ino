@@ -93,7 +93,7 @@ void loop()
 {
   bool newData = false;
   int year=0;
-  byte month=0, day=0, hour=0, minute=0, second=0, hundredths=0;
+  byte month=0, day=0, hour=0, minute=0, second=0;
   unsigned long age=0;
 
   int altm=0;
@@ -123,8 +123,8 @@ void loop()
     minute=gps.time.minute();
     second=gps.time.second();
 
-    lat=gps.location.lat();
-    lon=gps.location.lng();
+    lat=gps.location.lat()*1000000;
+    lon=gps.location.lng()*1000000;
 
     altm = int(gps.altitude.meters()); // integer value of altitude in meters
     ialt = int(gps.altitude.feet());  // integer value of altitude in feet
