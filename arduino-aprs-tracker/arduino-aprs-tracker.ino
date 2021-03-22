@@ -1,8 +1,8 @@
 /***
  * Arduino APRS Tracker (aat) with Arduino Pro Mini 3.3V/8 MHz
- * Install the following libraries through Arduino Library Manager
- * - TinyGPS by Mikal Hart
- * -
+ * Install the following libraries
+ * - TinyGPSPlus by Mikal Hart https://github.com/mikalhart/TinyGPSPlus
+ * - LibAPRS (modified) https://github.com/billygr/libaprs
  * -
  ***/
 
@@ -147,8 +147,8 @@ void loop()
     }
     courseDelta = abs (courseDelta) ;
 
-//    age = gps.age();
-    if (age = 0)
+    age = gps.location.age();
+    if (!gps.location.isValid())
       Serial.println(F("No fix detected"));
     else if (age > 5000)
       Serial.println(F("Warning: possible stale data!"));
