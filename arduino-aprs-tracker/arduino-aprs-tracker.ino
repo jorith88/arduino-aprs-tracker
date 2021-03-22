@@ -8,7 +8,7 @@
 
 #include <SoftwareSerial.h>
 #include "src/SimpleTimer/SimpleTimer.h"
-#include <TinyGPS.h>
+#include <TinyGPS++.h>
 #include <LibAPRS.h>
 
 // Manual update button
@@ -18,7 +18,7 @@
 // Shares pins with (MISO 12/ MOSI 11) used for SPI
 #define GPS_RX_PIN 12
 #define GPS_TX_PIN 11
-TinyGPS gps;
+TinyGPSPlus gps;
 SoftwareSerial GPSSerial(GPS_RX_PIN, GPS_TX_PIN);
 
 // LibAPRS
@@ -111,7 +111,8 @@ void loop()
       if (gps.encode(c)) // Did a new valid sentence come in?
       {
       // FIXME potential wrong data coming from GPS
-        gps.get_position(&lat, &lon, &age);
+        lat=gps.location.lat();
+        lon=gps.location.lng();
         if (lat != 0) newData = true;
       }
     }
@@ -119,17 +120,24 @@ void loop()
 
   if (newData)
   {
-    gps.crack_datetime(&year, &month, &day, &hour, &minute, &second, NULL, &age);
-    gps.get_position(&lat, &lon, &age);
-    
-    falt = gps.f_altitude(); // +/- altitude in meters
+    year=gps.date.year();
+    month=gps.date.month();
+    day=gps.date.day();
+    hour=gps.time.hour();
+    minute=gps.time.minute();
+    second=gps.time.second();
+
+    lat=gps.location.lat();
+    lon=gps.location.lng();
+
+    falt = gps.altitude.meters(); // +/- altitude in meters
     ialt = int(falt*3.281);  // integer value of altitude in feet
 
-    fkmph = gps.f_speed_kmph(); // speed in km/hs
+    fkmph = gps.speed.kmph(); // speed in km/hs
 
-    speed_kt = (int) gps.f_speed_knots();
+    speed_kt = (int) gps.speed.knots();
 
-    currentcourse = (int) gps.f_course();
+    currentcourse = (int) gps.course.deg();
 
     // Calculate difference of course to smartbeacon
     courseDelta = (int) ( previouscourse - currentcourse );
@@ -139,7 +147,8 @@ void loop()
     }
     courseDelta = abs (courseDelta) ;
 
-    if (age == TinyGPS::GPS_INVALID_AGE)
+//    age = gps.age();
+    if (age = 0)
       Serial.println(F("No fix detected"));
     else if (age > 5000)
       Serial.println(F("Warning: possible stale data!"));
