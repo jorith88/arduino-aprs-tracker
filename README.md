@@ -16,3 +16,14 @@ There are cases where the NEO-6M displays wrong data such as course/altitude. I 
 When the interrupt is fired, disrupts the SoftwareSerial so it looses GPS messages.
 By default NEO-6M has these messages enabled GSV, RMC, GSA, GGA, GLL, VTG, TXT. 
 The GLL is not needed so it is disabled on power on. If you still have issues enable the define, it will switch the NEO-6M on 4800 baud which looks like it fixes it
+
+## Ignore configuration changes
+To ignore changes to configuration.h in Git, execute the following command:
+```
+git update-index --assume-unchanged arduino-aprs-tracker/configuration.h
+```
+
+To start tracking changes again:
+```
+git update-index --no-assume-unchanged arduino-aprs-tracker/configuration.h
+```
