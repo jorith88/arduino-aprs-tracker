@@ -60,6 +60,8 @@ static char conv_buf[CONV_BUF_SIZE];
 char* deg_to_nmea(long deg, boolean is_lat);
 void locationUpdate();
 
+#define SERIAL_LOG_OUTPUT true
+
 
 /*****************************************************************************************/
 void setup()
@@ -70,7 +72,9 @@ void setup()
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(GPS_FIX_LED,OUTPUT);
 
-  Serial.println(F("Arduino APRS Tracker"));
+  if (SERIAL_LOG_OUTPUT) {
+    Serial.println(F("Arduino APRS Tracker"));
+  }
 
   // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
   //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
@@ -98,7 +102,9 @@ void loop()
     while (GPSSerial.available())
     {
       char c = GPSSerial.read();
-      // Serial.write(c); // uncomment this line if you want to see the GPS data flowing
+      if (SERIAL_LOG_OUTPUT) {
+        Serial.write(c); // uncomment this line if you want to see the GPS data flowing
+      }
       if (gps.encode(c)) // Did a new valid sentence come in?
        newData = true;
     }
@@ -135,32 +141,41 @@ void loop()
 
     age = gps.location.age();
     if (!gps.location.isValid()) {
-      Serial.println(F("No fix detected"));
+      if (SERIAL_LOG_OUTPUT) {
+        Serial.println(F("No fix detected"));
+      }
       return;
     } else if (age > 5000) {
-      Serial.println(F("Warning: possible stale data!"));
+      if (SERIAL_LOG_OUTPUT) {
+        Serial.println(F("Warning: possible stale data!"));
+      }
     } else {
-      //Serial.println(F("Data is current."));
+      if (SERIAL_LOG_OUTPUT) {
+        Serial.println(F("Data is current."));
+      }
       digitalWrite(GPS_FIX_LED, !digitalRead(GPS_FIX_LED)); // Toggles the GPS FIX LED on/off
     }
 
 
-    Serial.print(static_cast<int>(day)); Serial.print(F("/")); Serial.print(static_cast<int>(month)); Serial.print(F("/")); Serial.print(year);
-    Serial.print(F(" ")); Serial.print(static_cast<int>(hour)); Serial.print(F(":")); Serial.print(static_cast<int>(minute)); Serial.print(F(":")); Serial.print(static_cast<int>(second));
-    Serial.print(F(" "));
-    Serial.print(F("LAT="));Serial.print(lat);
-    Serial.print(F(" LON="));Serial.print(lon);
-    Serial.print(F(" "));
-    Serial.print(deg_to_nmea(lat, true));
-    Serial.print(F("/"));
-    Serial.print(deg_to_nmea(lon, false));
-    Serial.print(F(" Altitude m/ft: ")); Serial.print(altm);Serial.print(F("/"));Serial.println(ialt);
-
+    if (SERIAL_LOG_OUTPUT) {
+      Serial.print(static_cast<int>(day)); Serial.print(F("/")); Serial.print(static_cast<int>(month)); Serial.print(F("/")); Serial.print(year);
+      Serial.print(F(" ")); Serial.print(static_cast<int>(hour)); Serial.print(F(":")); Serial.print(static_cast<int>(minute)); Serial.print(F(":")); Serial.print(static_cast<int>(second));
+      Serial.print(F(" "));
+      Serial.print(F("LAT="));Serial.print(lat);
+      Serial.print(F(" LON="));Serial.print(lon);
+      Serial.print(F(" "));
+      Serial.print(deg_to_nmea(lat, true));
+      Serial.print(F("/"));
+      Serial.print(deg_to_nmea(lon, false));
+      Serial.print(F(" Altitude m/ft: ")); Serial.print(altm);Serial.print(F("/"));Serial.println(ialt);
+    }
 
     if (digitalRead(BUTTON_PIN)==0)
     {
       while(digitalRead(BUTTON_PIN)==0) {}; //debounce
-      Serial.println(F("MANUAL UPDATE"));
+      if (SERIAL_LOG_OUTPUT) {
+        Serial.println(F("MANUAL UPDATE"));
+      }
       locationUpdate();
     }
   
@@ -180,7 +195,9 @@ void loop()
 
     if (courseDelta > turn_threshold ){
       if ( millis() - lastTX > MIN_TURN_TIME *1000L){
-        Serial.println(F("APRS UPDATE"));
+        if (SERIAL_LOG_OUTPUT) {
+          Serial.println(F("APRS UPDATE"));
+        }
         locationUpdate();
         lastTX = millis();
       }
@@ -189,7 +206,9 @@ void loop()
     previouscourse = currentcourse;
 
     if ( millis() - lastTX > tx_interval) {
-      Serial.println(F("APRS UPDATE"));
+      if (SERIAL_LOG_OUTPUT) {
+        Serial.println(F("APRS UPDATE"));
+      }
       locationUpdate();
       lastTX = millis();
     }
@@ -217,7 +236,9 @@ void locationUpdate() {
   sprintf(temp, "%06d", ialt);
   strcat(APRS_comment,temp);
   strcat(APRS_comment,comment);
-  //Serial.println(APRS_comment);
+  if (SERIAL_LOG_OUTPUT) {
+    Serial.println(APRS_comment);
+  }
 
   APRS_setLat((char*)deg_to_nmea(lat, true));
   APRS_setLon((char*)deg_to_nmea(lon, false));
