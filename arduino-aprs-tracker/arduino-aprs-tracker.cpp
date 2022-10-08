@@ -60,9 +60,6 @@ static char conv_buf[CONV_BUF_SIZE];
 char* deg_to_nmea(long deg, boolean is_lat);
 void locationUpdate();
 
-#define SERIAL_LOG_OUTPUT true
-
-
 /*****************************************************************************************/
 void setup()
 {
