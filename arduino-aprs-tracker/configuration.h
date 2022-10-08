@@ -18,3 +18,6 @@ char APRS_SYMBOL = SYMBOL_BIKE;
 #define TURN_MIN  30
 #define TURN_SLOPE  240
 #define MIN_TURN_TIME 20
+
+// Debug settings
+#define SERIAL_LOG_OUTPUT false
