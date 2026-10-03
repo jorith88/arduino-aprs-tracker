@@ -225,14 +225,13 @@ void locationUpdate() {
 //A=001234. The altitude may appear anywhere in the comment.
 //Source: APRS protcol
 
-  char comment[] = "PA3WWE/J Scouting Wielewaal";
   char temp[8];
-  char APRS_comment [36]="/A=";
+  char APRS_comment[3 + 6 + sizeof(APRS_COMMENT)] = "/A=";
 
   // Convert altitude in string and pad left
   sprintf(temp, "%06d", ialt);
   strcat(APRS_comment,temp);
-  strcat(APRS_comment,comment);
+  strcat(APRS_comment,APRS_COMMENT);
   if (SERIAL_LOG_OUTPUT) {
     Serial.println(APRS_comment);
   }
