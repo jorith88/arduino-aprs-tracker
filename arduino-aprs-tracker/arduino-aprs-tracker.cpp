@@ -225,7 +225,7 @@ void locationUpdate() {
 //A=001234. The altitude may appear anywhere in the comment.
 //Source: APRS protcol
 
-  char comment []= "Arduino APRS Tracker";
+  char comment[] = "PA3WWE/J Scouting Wielewaal";
   char temp[8];
   char APRS_comment [36]="/A=";
 
