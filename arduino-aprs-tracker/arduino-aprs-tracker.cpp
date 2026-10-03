@@ -53,6 +53,12 @@ unsigned long lastTX =0, tx_interval= 0;
 
 int previouscourse = 0, turn_threshold = 0, courseDelta = 0;
 
+// set when the manual update button was pressed, handled once we have a fix
+bool buttonPressed = false;
+
+// max time to wait for LibAPRS to finish transmitting
+#define TX_TIMEOUT_MS 10000UL
+
 // buffer for conversions
 #define CONV_BUF_SIZE 16
 static char conv_buf[CONV_BUF_SIZE];
@@ -105,6 +111,13 @@ void loop()
       if (gps.encode(c)) // Did a new valid sentence come in?
        newData = true;
     }
+
+    // Poll the button continuously so short presses are not missed
+    if (!buttonPressed && digitalRead(BUTTON_PIN) == LOW)
+    {
+      delay(30); // debounce
+      if (digitalRead(BUTTON_PIN) == LOW) buttonPressed = true;
+    }
   }
 
   if (newData)
@@ -141,11 +154,15 @@ void loop()
       if (SERIAL_LOG_OUTPUT) {
         Serial.println(F("No fix detected"));
       }
+      buttonPressed = false;
       return;
     } else if (age > 5000) {
+      // Never transmit a stale position
       if (SERIAL_LOG_OUTPUT) {
-        Serial.println(F("Warning: possible stale data!"));
+        Serial.println(F("Warning: stale data, not transmitting"));
       }
+      buttonPressed = false;
+      return;
     } else {
       if (SERIAL_LOG_OUTPUT) {
         Serial.println(F("Data is current."));
@@ -167,13 +184,15 @@ void loop()
       Serial.print(F(" Altitude m/ft: ")); Serial.print(altm);Serial.print(F("/"));Serial.println(ialt);
     }
 
-    if (digitalRead(BUTTON_PIN)==0)
+    if (buttonPressed)
     {
-      while(digitalRead(BUTTON_PIN)==0) {}; //debounce
+      buttonPressed = false;
+      while(digitalRead(BUTTON_PIN)==0) {}; // wait for release
       if (SERIAL_LOG_OUTPUT) {
         Serial.println(F("MANUAL UPDATE"));
       }
       locationUpdate();
+      lastTX = millis();
     }
   
     // Based on HamHUB Smart Beaconing(tm) algorithm
@@ -185,10 +204,16 @@ void loop()
     }
     else {
     // Interval inbetween low and high speed
-    tx_interval = ((FAST_BEACON_RATE * HIGH_SPEED) / fkmph ) *1000L ;
+    // float math: FAST_BEACON_RATE * HIGH_SPEED overflows a 16-bit int
+    tx_interval = (unsigned long) (((float) FAST_BEACON_RATE * HIGH_SPEED) / fkmph * 1000.0f);
     }
 
-    turn_threshold = TURN_MIN + TURN_SLOPE / fkmph;
+    // Course is noise at low speed and TURN_SLOPE / fkmph divides by zero when standing still
+    if (fkmph >= TURN_MIN_SPEED) {
+      turn_threshold = TURN_MIN + TURN_SLOPE / fkmph;
+    } else {
+      turn_threshold = 360;
+    }
 
     if (courseDelta > turn_threshold ){
       if ( millis() - lastTX > MIN_TURN_TIME *1000L){
@@ -250,7 +275,8 @@ void locationUpdate() {
   APRS_sendLoc(APRS_comment, strlen(APRS_comment));
 
   // read TX LED pin and wait till TX has finished. LibAPRS has TX_LED defined on (PB5), i use LED_BUILTIN on my version as TX_LED
-  while(digitalRead(LED_BUILTIN));
+  // (with a timeout so a stuck pin can't hang the tracker)
+  for (unsigned long start = millis(); digitalRead(LED_BUILTIN) && millis() - start < TX_TIMEOUT_MS;) {}
 
   // start SoftSerial again
   GPSSerial.begin(9600);
@@ -296,4 +322,4 @@ char* deg_to_nmea(long deg, boolean is_lat) {
     else conv_buf[8]='E';
     return conv_buf;
     }
-}
+}

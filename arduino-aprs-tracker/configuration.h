@@ -18,6 +18,7 @@ char APRS_SYMBOL = SYMBOL_BIKE;
 #define TURN_MIN  30
 #define TURN_SLOPE  240
 #define MIN_TURN_TIME 20
+#define TURN_MIN_SPEED 5 // [km/h] below this no turn beacons
 
 // Debug settings
 #define SERIAL_LOG_OUTPUT false
